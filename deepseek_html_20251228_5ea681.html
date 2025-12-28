@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн Шахматы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-mode {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .create-section, .join-section {
+            margin-bottom: 30px;
+        }
+
+        .game-link {
+            background: #e8f4fd;
+            border: 2px dashed #4dabf7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .game-link.active {
+            display: block;
+        }
+
+        .link-text {
+            word-break: break-all;
+            color: #1864ab;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            background: #4dabf7;
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .instructions h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            list-style-position: inside;
+            color: #666;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♔ Онлайн Шахматы ♚</h1>
+        <p class="subtitle">Играйте в шахматы с друзьями из любой точки мира</p>
+        
+        <div class="game-mode">
+            <div class="create-section">
+                <h2>Создать новую игру</h2>
+                <div class="form-group">
+                    <label for="username-create">Ваше имя:</label>
+                    <input type="text" id="username-create" placeholder="Введите ваше имя">
+                </div>
+                <button id="createGameBtn">Создать игру</button>
+                
+                <div id="gameLink" class="game-link">
+                    <div class="link-text" id="linkText"></div>
+                    <button class="copy-btn" id="copyLinkBtn">Копировать ссылку</button>
+                </div>
+            </div>
+            
+            <div class="join-section">
+                <h2>Присоединиться к игре</h2>
+                <div class="form-group">
+                    <label for="username-join">Ваше имя:</label>
+                    <input type="text" id="username-join" placeholder="Введите ваше имя">
+                </div>
+                <div class="form-group">
+                    <label for="gameId">ID игры:</label>
+                    <input type="text" id="gameId" placeholder="Введите ID игры из ссылки">
+                </div>
+                <button id="joinGameBtn">Присоединиться</button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>Как играть:</h3>
+            <ul>
+                <li>Создайте игру и отправьте ссылку другу</li>
+                <li>Или присоединитесь по ID игры</li>
+                <li>Белые ходят первыми</li>
+                <li>При превращении пешки выберите фигуру</li>
+                <li>Чат доступен во время игры</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        document.getElementById('createGameBtn').addEventListener('click', () => {
+            const username = document.getElementById('username-create').value.trim();
+            if (!username) {
+                alert('Введите ваше имя');
+                return;
+            }
+            
+            socket.emit('create_game', (response) => {
+                const linkText = `${response.url}`;
+                document.getElementById('linkText').textContent = linkText;
+                document.getElementById('gameLink').classList.add('active');
+                
+                // Сохраняем имя пользователя
+                localStorage.setItem('chess_username', username);
+                
+                // Автоматически присоединяем создателя к игре
+                setTimeout(() => {
+                    window.location.href = response.url;
+                }, 1000);
+            });
+        });
+        
+        document.getElementById('copyLinkBtn').addEventListener('click', () => {
+            const linkText = document.getElementById('linkText').textContent;
+            navigator.clipboard.writeText(linkText).then(() => {
+                alert('Ссылка скопирована!');
+            });
+        });
+        
+        document.getElementById('joinGameBtn').addEventListener('click', () => {
+            const username = document.getElementById('username-join').value.trim();
+            const gameId = document.getElementById('gameId').value.trim();
+            
+            if (!username) {
+                alert('Введите ваше имя');
+                return;
+            }
+            
+            if (!gameId) {
+                alert('Введите ID игры');
+                return;
+            }
+            
+            // Сохраняем имя пользователя
+            localStorage.setItem('chess_username', username);
+            
+            // Переходим на страницу игры
+            window.location.href = `/game/${gameId}`;
+        });
+        
+        // Восстанавливаем имя пользователя при загрузке
+        const savedUsername = localStorage.getItem('chess_username');
+        if (savedUsername) {
+            document.getElementById('username-create').value = savedUsername;
+            document.getElementById('username-join').value = savedUsername;
+        }
+    </script>
+</body>
+</html>

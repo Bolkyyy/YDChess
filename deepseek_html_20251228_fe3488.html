@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шахматная игра</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        /* Шахматная доска */
+        .chess-board-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .player-white .player-icon {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+
+        .player-black .player-icon {
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+        }
+
+        .player-details h3 {
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        .player-details .status {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .turn-indicator {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            background: #e8f4fd;
+            color: #1864ab;
+        }
+
+        .turn-indicator.white-turn {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .turn-indicator.black-turn {
+            background: #2c3e50;
+            color: white;
+        }
+
+        #chessboard {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 3px solid #333;
+            border-radius: 5px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .board-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+        }
+
+        .controls button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-left: 10px;
+        }
+
+        .controls button:hover {
+            transform: translateY(-2px);
+        }
+
+        .controls button:active {
+            transform: translateY(0);
+        }
+
+        /* Панель чата и информации */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-info, .chat-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .game-info h3, .chat-container h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .game-details {
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: bold;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* Чат */
+        .chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .message.own {
+            background: #e3f2fd;
+            margin-left: auto;
+        }
+
+        .message.opponent {
+            background: #f5f5f5;
+        }
+
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .message.white .message-header {
+            color: #333;
+        }
+
+        .message.black .message-header {
+            color: #2c3e50;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-input button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .chat-input button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .modal p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .promotion-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .promotion-piece {
+            font-size: 40px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .promotion-piece:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .modal-buttons button:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .side-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .board-header, .board-footer {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .player-info {
+                justify-content: center;
+            }
+            
+            #chessboard {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Шахматная доска -->
+        <div class="chess-board-container">
+            <div class="board-header">
+                <div class="player-info player-black">
+                    <div class="player-icon">♚</div>
+                    <div class="player-details">
+                        <h3 id="blackPlayerName">Черные (ожидание...)</h3>
+                        <div class="status" id="blackPlayerStatus">Не подключен</div>
+                    </div>
+                </div>
+                
+                <div id="turnIndicator" class="turn-indicator white-turn">
+                    Ход белых
+                </div>
+                
+                <div class="player-info player-white">
+                    <div class="player-icon">♔</div>
+                    <div class="player-details">
+                        <h3 id="whitePlayerName">Белые (ожидание...)</h3>
+                        <div class="status" id="whitePlayerStatus">Не подключен</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="chessboard"></div>
+            
+            <div class="board-footer">
+                <div class="game-id">
+                    ID игры: <span id="currentGameId">...</span>
+                </div>
+                <div class="controls">
+                    <button id="resignBtn">Сдаться</button>
+                    <button id="offerDrawBtn">Предложить ничью</button>
+                    <button id="newGameBtn">Новая игра</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Панель информации и чата -->
+        <div class="side-panel">
+            <div class="game-info">
+                <h3>Информация об игре</h3>
+                <div class="game-details">
+                    <div class="info-item">
+                        <span class="info-label">Статус:</span>
+                        <span class="info-value" id="gameStatus">Ожидание игроков</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ваш цвет:</span>
+                        <span class="info-value" id="yourColor">...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ходов сделано:</span>
+                        <span class="info-value" id="moveCount">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Время игры:</span>
+                        <span class="info-value" id="gameTime">00:00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-container">
+                <h3>Чат игры</h3>
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Сообщения будут добавляться здесь -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Введите сообщение..." maxlength="200">
+                    <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно выбора фигуры -->
+    <div id="promotionModal" class="modal">
+        <div class="modal-content">
+            <h2>Выберите фигуру</h2>
+            <p>В какую фигуру превратить пешку?</p>
+            <div class="promotion-options">
+                <div class="promotion-piece" data-piece="q">♕</div>
+                <div class="promotion-piece" data-piece="r">♖</div>
+                <div class="promotion-piece" data-piece="b">♗</div>
+                <div class="promotion-piece" data-piece="n">♘</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" id="cancelPromotionBtn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно окончания игры -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 id="gameOverTitle">Игра окончена!</h2>
+            <p id="gameOverMessage"></p>
+            <div class="modal-buttons">
+                <button class="btn-primary" id="rematchBtn">Реванш</button>
+                <button class="btn-secondary" id="newGameMenuBtn">Новая игра</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Подключаем библиотеки -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Инициализация переменных
+        const socket = io();
+        let board = null;
+        let gameId = null;
+        let playerColor = null;
+        let username = localStorage.getItem('chess_username') || 'Игрок';
+        let pendingPromotion = null;
+        let gameStartTime = null;
+        let gameTimer = null;
+        
+        // Получаем ID игры из URL
+        const pathSegments = window.location.pathname.split('/');
+        gameId = pathSegments[pathSegments.length - 1];
+        
+        // Инициализация шахматной доски
+        function initBoard() {
+            const config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd,
+                orientation: playerColor === 'white' ? 'white' : 'black',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            };
+            
+            board = Chessboard('chessboard', config);
+            
+            // Показываем ID игры
+            document.getElementById('currentGameId').textContent = gameId;
+        }
+        
+        // При загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            // Запрашиваем имя пользователя, если его нет
+            if (!localStorage.getItem('chess_username')) {
+                username = prompt('Введите ваше имя:', 'Игрок');
+                localStorage.setItem('chess_username', username);
+            }
+            
+            // Подключаемся к игре
+            socket.emit('join_game', {
+                gameId: gameId,
+                username: username
+            });
+            
+            // Инициализируем доску с начальной позицией
+            initBoard();
+            
+            // Обработчики кнопок
+            document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+            document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            document.getElementById('resignBtn').addEventListener('click', resign);
+            document.getElementById('offerDrawBtn').addEventListener('click', offerDraw);
+            document.getElementById('newGameBtn').addEventListener('click', newGame);
+            document.getElementById('rematchBtn').addEventListener('click', requestRematch);
+            document.getElementById('newGameMenuBtn').addEventListener('click', () => {
+                window.location.href = '/';
+            });
+            
+            // Обработчики выбора фигуры при превращении
+            document.querySelectorAll('.promotion-piece').forEach(piece => {
+                piece.addEventListener('click', () => {
+                    const pieceType = piece.getAttribute('data-piece');
+                    completePromotion(pieceType);
+                });
+            });
+            
+            document.getElementById('cancelPromotionBtn').addEventListener('click', () => {
+                document.getElementById('promotionModal').classList.remove('active');
+                board.position(pendingPromotion.position);
+            });
+            
+            // Обновляем таймер игры
+            updateGameTimer();
+        });
+        
+        // События сокета
+        socket.on('joined', (data) => {
+            playerColor = data.color;
+            gameId = data.gameId;
+            
+            // Обновляем информацию о себе
+            document.getElementById('yourColor').textContent = 
+                playerColor === 'white' ? 'Белые' : 'Черные';
+            document.getElementById('yourColor').style.color = 
+                playerColor === 'white' ? '#333' : '#2c3e50';
+            
+            // Обновляем ориентацию доски
+            board.orientation(playerColor);
+            
+            // Устанавливаем начальную позицию
+            if (data.fen) {
+                board.position(data.fen);
+            }
+            
+            // Запускаем таймер игры
+            if (data.status === 'playing') {
+                startGameTimer();
+            }
+        });
+        
+        socket.on('game_update', (data) => {
+            // Обновляем информацию об игроках
+            if (data.players.white) {
+                document.getElementById('whitePlayerName').textContent = 
+                    `${data.players.white.username} (Белые)`;
+                document.getElementById('whitePlayerStatus').textContent = 
+                    playerColor === 'white' ? 'Вы' : 'Подключен';
+            }
+            
+            if (data.players.black) {
+                document.getElementById('blackPlayerName').textContent = 
+                    `${data.players.black.username} (Черные)`;
+                document.getElementById('blackPlayerStatus').textContent = 
+                    playerColor === 'black' ? 'Вы' : 'Подключен';
+            }
+            
+            // Обновляем статус игры
+            document.getElementById('gameStatus').textContent = 
+                data.status === 'waiting' ? 'Ожидание игрока' :
+                data.status === 'playing' ? 'Игра идет' : 'Игра завершена';
+            
+            // Обновляем индикатор хода
+            const turn = data.turn === 'w' ? 'white' : 'black';
+            document.getElementById('turnIndicator').textContent = 
+                turn === 'white' ? 'Ход белых' : 'Ход черных';
+            document.getElementById('turnIndicator').className = 
+                `turn-indicator ${turn}-turn`;
+            
+            // Запускаем таймер, если игра началась
+            if (data.status === 'playing' && !gameStartTime) {
+                startGameTimer();
+            }
+        });
+        
+        socket.on('move_made', (data) => {
+            // Обновляем позицию на доске
+            board.position(data.fen);
+            
+            // Обновляем индикатор хода
+            const turn = data.turn === 'w' ? 'white' : 'black';
+            document.getElementById('turnIndicator').textContent = 
+                turn === 'white' ? 'Ход белых' : 'Ход черных';
+            document.getElementById('turnIndicator').className = 
+                `turn-indicator ${turn}-turn`;
+            
+            // Обновляем счетчик ходов
+            const moveCount = data.pgn ? data.pgn.split('.').length - 1 : 0;
+            document.getElementById('moveCount').textContent = moveCount;
+        });
+        
+        socket.on('chat_message', (data) => {
+            addMessage(data.username, data.message, data.player);
+        });
+        
+        socket.on('game_over', (data) => {
+            stopGameTimer();
+            
+            let title = 'Игра окончена!';
+            let message = '';
+            
+            switch (data.result) {
+                case 'white':
+                    message = 'Белые выиграли';
+                    if (data.reason === 'checkmate') message += ' матом';
+                    break;
+                case 'black':
+                    message = 'Черные выиграли';
+                    if (data.reason === 'checkmate') message += ' матом';
+                    break;
+                case 'draw':
+                    message = 'Ничья';
+                    if (data.reason === 'stalemate') message += ' - пат';
+                    break;
+                case 'abandoned':
+                    title = 'Игрок вышел';
+                    message = 'Противник покинул игру';
+                    break;
+            }
+            
+            document.getElementById('gameOverTitle').textContent = title;
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('gameOverModal').classList.add('active');
+        });
+        
+        socket.on('player_disconnected', (data) => {
+            addMessage('Система', 'Противник отключился', 'system');
+        });
+        
+        socket.on('error', (message) => {
+            alert('Ошибка: ' + message);
+        });
+        
+        // Функции для шахматной доски
+        function onDragStart(source, piece, position, orientation) {
+            // Только ваш ход
+            const currentTurn = document.getElementById('turnIndicator').className.includes('white-turn') ? 'white' : 'black';
+            if (playerColor !== currentTurn) return false;
+            
+            // Только ваши фигуры
+            if ((playerColor === 'white' && piece.search(/^b/) !== -1) ||
+                (playerColor === 'black' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+        
+        function onDrop(source, target) {
+            // Проверяем, нужно ли превращение пешки
+            const piece = board.position()[source];
+            const isPawn = piece && (piece.includes('P') || piece.includes('p'));
+            const promotionRank = playerColor === 'white' ? '8' : '1';
+            
+            if (isPawn && target[1] === promotionRank) {
+                // Показываем модальное окно выбора фигуры
+                pendingPromotion = { source, target };
+                document.getElementById('promotionModal').classList.add('active');
+                return 'snapback';
+            }
+            
+            // Отправляем ход
+            socket.emit('move', {
+                gameId: gameId,
+                from: source,
+                to: target
+            });
+            
+            return 'snapback'; // Будем обновлять через сервер
+        }
+        
+        function onSnapEnd() {
+            board.position(board.position());
+        }
+        
+        function completePromotion(pieceType) {
+            document.getElementById('promotionModal').classList.remove('active');
+            
+            socket.emit('move', {
+                gameId: gameId,
+                from: pendingPromotion.source,
+                to: pendingPromotion.target,
+                promotion: pieceType
+            });
+            
+            pendingPromotion = null;
+        }
+        
+        // Функции чата
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                socket.emit('chat_message', {
+                    gameId: gameId,
+                    message: message
+                });
+                
+                input.value = '';
+            }
+        }
+        
+        function addMessage(username, message, player) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.className = `message ${player === playerColor ? 'own' : 'opponent'} ${player}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    ${username} ${player === 'white' ? '♔' : player === 'black' ? '♚' : ''}
+                </div>
+                <div class="message-content">${message}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Игровые функции
+        function resign() {
+            if (confirm('Вы уверены, что хотите сдаться?')) {
+                // В реальном приложении здесь была бы логика сдачи
+                addMessage('Система', 'Вы сдались', 'system');
+            }
+        }
+        
+        function offerDraw() {
+            // В реальном приложении здесь была бы логика предложения ничьей
+            addMessage('Система', 'Вы предложили ничью', 'system');
+        }
+        
+        function newGame() {
+            window.location.href = '/';
+        }
+        
+        function requestRematch() {
+            socket.emit('rematch_request', { gameId: gameId });
+            document.getElementById('gameOverModal').classList.remove('active');
+        }
+        
+        // Таймер игры
+        function startGameTimer() {
+            gameStartTime = new Date();
+            gameTimer = setInterval(updateGameTimer, 1000);
+        }
+        
+        function stopGameTimer() {
+            if (gameTimer) {
+                clearInterval(gameTimer);
+            }
+        }
+        
+        function updateGameTimer() {
+            if (gameStartTime) {
+                const elapsed = new Date() - gameStartTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('gameTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+    </script>
+</body>
+</html>
